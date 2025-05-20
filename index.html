@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Carta de Amor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            min-height: 100vh;
+        
+            overflow: hidden;
+            color: white; /* Texto en blanco para mejor contraste */
+        }
+        
+        /* Estilos para el reproductor de música y letras sincronizadas */
+        .lyrics-container {
+            position: fixed;
+            top: 10px; /* Movido más arriba */
+            left: 0;
+            width: 100%;
+            padding: 10px 0;
+            text-align: center;
+            z-index: 100;
+        }
+        
+        .lyrics-text {
+            font-size: 2.5em;
+            color: white;
+            font-family: 'Arial', sans-serif;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            padding: 0 20px;
+            position: relative;
+        }
+        
+        /* Estilos para la animación de escritura */
+        .typing-animation {
+            display: inline-block;
+            overflow: hidden;
+            white-space: nowrap;
+            border-right: 3px solid white;
+            animation: typing 2s steps(30, end), blink-caret 0.75s step-end infinite;
+            margin: 0 auto;
+            max-width: 100%;
+        }
+        
+        @keyframes typing {
+            from { width: 0 }
+            to { width: 100% }
+        }
+        
+        @keyframes blink-caret {
+            from, to { border-color: transparent }
+            50% { border-color: white }
+        }
+        
+        .container {
+            position: relative;
+            perspective: 1500px;
+            margin-top: auto;
+            margin-bottom: 100px; /* Aumentado el espacio en la parte inferior */
+            pointer-events: none; /* Deshabilita interacción hasta que se active */
+        }
+        
+        .sobre {
+            width: 300px;
+            height: 200px;
+            position: relative;
+            cursor: pointer;
+            transition: transform 0.5s ease;
+            transform-style: preserve-3d;
+            background-color: #f0e6d2;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .sobre-frente {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0e6d2;
+            border-radius: 5px;
+            z-index: 2;
+        }
+        
+        /* Corazón en lugar del círculo - corregido */
+        .corazon {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotate(409deg);
+            background-color: #cc0000;
+        }
+        
+        .corazon::before,
+        .corazon::after {
+            content: "";
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            background-color: #cc0000;
+            border-radius: 50%;
+        }
+        
+        .corazon::before {
+            top: -15px;
+            left: 0;
+        }
+        
+        .corazon::after {
+            top: 0;
+            left: -15px;
+        }
+        
+        /* Solapa triangular mejorada */
+        .sobre-solapa {
+            position: absolute;
+            width: 100%;
+            height: 100px;
+            top: 0;
+            left: 0;
+            background-color: #e6d9bc;
+            clip-path: polygon(0 0, 50% 100%, 100% 0);
+            transform-origin: top;
+            transition: transform 0.8s ease;
+            z-index: 1;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        /* Añadimos un borde simulado para dar más profundidad al triángulo */
+        .sobre-solapa:after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 5%;
+            width: 90%;
+            height: 2px;
+            background-color: rgba(0,0,0,0.1);
+        }
+        
+        .sobre.abierto .sobre-solapa {
+            transform: rotateX(180deg);
+        }
+        
+        /* Solapa triangular interna que se ve siempre */
+        .sobre-solapa-interna {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 10vh;
+            transform: rotate(180deg);
+            z-index: 9999; /* para que esté por encima de todo */
+            background-color: #e6d9bc;
+            clip-path: polygon(0 100%, 50% 0, 100% 100%);
+            
+        }
+        
+        .carta {
+            position: absolute;
+            width: 280px;
+            height: 0;
+            background-color: #fff9e6;
+            bottom: 200px; /* Posicionada justo encima del sobre */
+            left: 10px;
+            transition: height 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+            overflow: hidden;
+            z-index: 3; /* Mayor que el sobre para que aparezca por encima */
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            transform: translateY(0);
+        }
+        
+        .sobre.abierto .carta {
+            height: 180px; /* Altura reducida para que no se vea todo el texto */
+            transform: translateY(-20px); /* Se mueve ligeramente hacia arriba al abrirse */
+        }
+        
+        /* Línea de doblez en la carta */
+        .carta:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+            top: 90px; /* Posición del doblez */
+            left: 0;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .carta-contenido {
+            padding: 20px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.5s ease 1s;
+            font-family: 'Courier New', Courier, monospace;
+            color: #333;
+            background-image: linear-gradient(to bottom, rgba(255,249,230,0.8) 0%, rgba(255,249,230,0.8) 100%), 
+                              repeating-linear-gradient(#f0e6d2 0px, #f0e6d2 1px, transparent 1px, transparent 25px);
+            height: 100%;
+            overflow-y: auto;
+        }
+        
+        .sobre.abierto .carta-contenido {
+            opacity: 1;
+        }
+        
+        .carta-expandida {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90vw;
+            max-width: 600px;
+            height: 80vh;
+            max-height: 800px;
+            background-color: #fff9e6;
+            z-index: 10;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            overflow-y: auto;
+            display: none;
+            background-image: linear-gradient(to bottom, rgba(255,249,230,0.8) 0%, rgba(255,249,230,0.8) 100%), 
+                              repeating-linear-gradient(#f0e6d2 0px, #f0e6d2 1px, transparent 1px, transparent 25px);
+        }
+        
+        /* Línea de doblez en la carta expandida */
+        .carta-expandida:after {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 1px;
+            background-color: rgba(0, 0, 0, 0.1);
+            top: 30%;
+            left: 0;
+            box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+        }
+        
+        .carta-expandida.visible {
+            display: block;
+        }
+        
+        .carta-expandida h2 {
+            color: #8b4513;
+            margin-bottom: 20px;
+            font-size: 2em;
+            text-align: center;
+        }
+        
+        .carta-expandida p {
+            line-height: 1.8;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            color: #333;
+            text-align: justify;
+        }
+        
+        .firma {
+            font-style: italic;
+            margin-top: 30px;
+            font-size: 1.3em;
+            color: #8b4513;
+            text-align: right;
+        }
+        
+        .cerrar-expandida {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #8b4513;
+        }
+        .sobre-solapa-interna.oculto {
+            display: none;
+        }
+
+        @keyframes sacudir {
+            0% { transform: translate(0, 0) rotate(0deg); }
+            25% { transform: translate(-2px, -2px) rotate(-1deg); }
+            50% { transform: translate(2px, 2px) rotate(1deg); }
+            75% { transform: translate(-1px, 2px) rotate(-1deg); }
+            100% { transform: translate(0, 0) rotate(0deg); }
+        }
+
+        .sobre-frente:hover {
+            animation: sacudir 0.7s ease;
+        }
+
+        /* Overlay para bloquear interacción */
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000; /* Fondo completamente negro */
+            z-index: 999;
+            pointer-events: auto;
+        }
+        
+        .overlay.oculto {
+            display: none;
+        }
+        
+        /* Notificación para reproducir música */
+        .notificacion {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            z-index: 1000;
+            text-align: center;
+            max-width: 80%;
+            display: block; /* Siempre visible al inicio */
+        }
+        
+        .notificacion.oculta {
+            display: none;
+        }
+        
+        .notificacion.visible {
+            display: block;
+            animation: aparecer 0.5s ease-in-out;
+        }
+        
+        @keyframes aparecer {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        
+        .notificacion h3 {
+            margin-bottom: 15px;
+            color: #8b4513;
+        }
+        
+        .notificacion button {
+            background-color: #cc0000;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            transition: background-color 0.3s;
+        }
+        
+        .notificacion button:hover {
+            background-color: #a00000;
+        }
+        .heart {
+            position: fixed;
+            bottom: -10px;
+            background-color: #cc0000;
+            display: inline-block;
+            height: 20px;
+            width: 20px;
+            transform: rotate(-45deg);
+            animation-name: heartfloat;
+            animation-timing-function: ease-in-out;
+            z-index: 999;
+        }
+        
+        .heart:before,
+        .heart:after {
+            content: "";
+            background-color: #cc0000;
+            border-radius: 50%;
+            height: 20px;
+            position: absolute;
+            width: 20px;
+        }
+        
+        .heart:before {
+            top: -10px;
+            left: 0;
+        }
+        
+        .heart:after {
+            left: 10px;
+            top: 0;
+        }
+        
+        .heart.intense {
+            animation-duration: 3s;
+            animation-timing-function: ease-in-out;
+        }
+        
+        .heart.normal {
+            animation-duration: 6s;
+            animation-timing-function: ease-in-out;
+        }
+        
+        @keyframes heartfloat {
+            0% {
+                bottom: -10px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 0.8;
+            }
+            100% {
+                bottom: 100%;
+                opacity: 0;
+                transform: rotate(-45deg) translate(10px, 0);
+            }
+        }
+        
+        /* Mejoras para dispositivos móviles */
+        @media (max-width: 768px) {
+            .lyrics-text {
+                font-size: 1.5em;
+                min-height: 60px;
+                line-height: 1.3;
+            }
+            
+            .typing-animation {
+                animation: typing 1.5s steps(20, end), blink-caret 0.75s step-end infinite;
+                white-space: normal !important;
+                display: block;
+                text-align: center;
+                width: 100% !important;
+                border-right: none;
+            }
+            
+            .container {
+                margin-bottom: 50px; /* Ajustado para móviles */
+            }
+            
+            .notificacion {
+                padding: 15px;
+            }
+            
+            .notificacion button {
+                padding: 8px 15px;
+            }
+            .contador-container {
+            position: fixed;
+            top: 550px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 1001;
+            font-size: 2em;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            display: none; /* Oculto inicialmente */
+            }
+        }
+        
+        /* Estilos para el contador */
+        .contador-container {
+            position: fixed;
+            top: 270px;
+            left: 0;
+            width: 100%;
+            text-align: center;
+            z-index: 1001;
+            font-size: 2em;
+            color: white;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            display: none; /* Oculto inicialmente */
+        }
+        
+        /* Estilo para la carta desactivada */
+        .sobre.desactivado {
+            filter: grayscale(100%);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<audio id="sonido-carta" src="abrir.mp3" preload="auto"></audio>
+<audio id="sonido-expanir" src="expandir.mp3" preload="auto"></audio>
+<body>
+    <!-- Contador de 20 segundos -->
+    <div class="contador-container" id="contador">20</div>
+    
+    <!-- Overlay para bloquear interacción y crear fondo negro -->
+    <div class="overlay" id="overlay"></div>
+    
+    <!-- Contenedor de letras sincronizadas -->
+    <div class="lyrics-container">
+        <div class="lyrics-text" id="lyrics-display">
+            
+        </div>
+    </div>
+    
+    <audio id="song" src="music.mp3" preload="auto"></audio>
+    
+    <div class="container">
+        <div class="sobre" id="sobre">
+            <div class="sobre-frente">
+                <div class="corazon"></div>
+            </div>
+            <div class="sobre-solapa"></div>
+            <div class="sobre-solapa-interna"></div>
+            <div class="carta">
+                <div class="carta-contenido">
+                    <h2>Tocame </h2>
+                    <p>Mira tu carta 👀</p>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="carta-expandida" id="carta-expandida">
+        <button class="cerrar-expandida" id="cerrar-expandida">×</button>
+        <h2>TEST</h2>
+        <p>TEST</p>
+        <div class="firma">TEST,<br>TEST</div>
+    </div>
+    
+    <!-- Notificación para reproducir música -->
+    <div class="notificacion" id="notificacion">
+        <h3>¿Lista para tu regalo?</h3>
+        <button id="iniciar-musica">Sí, estoy lista ❤️</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sobre = document.getElementById('sobre');
+            const solapa = sobre.querySelector('.sobre-solapa-interna');
+            const cartaExpandida = document.getElementById('carta-expandida');
+            const cerrarExpandida = document.getElementById('cerrar-expandida');
+            let estaAbierto = false;
+            const sonidoCarta = document.getElementById('sonido-carta');
+            const sonidoExpandir = document.getElementById('sonido-expanir');
+            const song = document.getElementById('song');
+            const lyricsDisplay = document.getElementById('lyrics-display');
+            const notificacion = document.getElementById('notificacion');
+            const iniciarMusica = document.getElementById('iniciar-musica');
+            const overlay = document.getElementById('overlay');
+            const container = document.querySelector('.container');
+            const contador = document.getElementById('contador');
+            
+            // Desactivar la carta inicialmente
+            sobre.classList.add('desactivado');
+            
+            // Función para el contador
+            function iniciarContador() {
+                let segundos = 20;
+                contador.textContent = segundos;
+                contador.style.display = 'block'; // Mostrar el contador
+                
+                const intervalo = setInterval(function() {
+                    segundos--;
+                    contador.textContent = segundos;
+                    
+                    if (segundos <= 0) {
+                        clearInterval(intervalo);
+                        contador.style.display = 'none';
+                        sobre.classList.remove('desactivado');
+                    }
+                }, 1000);
+            }
+            
+            // Iniciar el contador cuando se inicia la música
+            iniciarMusica.addEventListener('click', function() {
+                notificacion.classList.add('oculta');
+                overlay.classList.add('oculto');
+                container.style.pointerEvents = 'auto'; // Habilita interacción con la carta
+                song.play();
+                updateLyricsInterval = setInterval(updateLyrics, 100);
+                iniciarContador(); // Iniciar el contador
+            });
+            
+            sobre.addEventListener('click', function() {
+                if (!estaAbierto) {
+                    sonidoCarta.currentTime = 0;
+                    sonidoCarta.play();
+
+                    sobre.classList.add('abierto');
+                    solapa.classList.add('oculto');
+                    estaAbierto = true;
+                } else {
+                    // Mostrar carta expandida Y reproducir sonido de expansión
+                    cartaExpandida.classList.add('visible');
+                    sonidoExpandir.currentTime = 0;
+                    sonidoExpandir.play();
+                }
+            });
+
+            cerrarExpandida.addEventListener('click', function(e) {
+                e.stopPropagation();
+                cartaExpandida.classList.remove('visible');
+            });
+            
+            // Letras de "Lover Rock" con tiempos en segundos
+            const lyrics = [
+                { time: 0, text: "🎵🎵🎵" },
+                { time: 16.97, text: "Feel like sun" },
+                { time: 18.73, text: "on my skin" },
+                { time: 21.11, text: "So this is love" },
+                { time: 23.10, text: "I know it is" },
+                { time: 25.39, text: "I know it sounds super cliché" },
+                { time: 28.23, text: "But you make me feel some type of way" },
+                { time: 30.06, text: "This is falling," },
+                { time: 32.10, text: "falling in love, yeah" },
+                { time: 35.23, text: "Mh-mh-mh-mh-mh-mmh, yeah" },
+                { time: 41.67, text: "I got a lot on my mind" },
+                { time: 43.66, text: "Got some more on my plate" },
+                { time: 45.52, text: "My baby got me looking forward to the end of the day" },
+                { time: 49.09, text: "What you say?" },
+                { time: 50.40, text: "You and me" },
+                { time: 52.80, text: "Just forget about the past," },
+                { time: 54.80, text: "throw it in the trash" },
+                { time: 56.24, text: "What you say?" },
+                { time: 57.60, text: "You and me" },
+                { time: 60.52, text: "Live the life we never had" },
+                { time: 63.36, text: "like we're never going back" },
+                { time: 67.19, text: "Feel like sun" },
+                { time: 68.98, text: "on my skin" },
+                { time: 72.36, text: "So this is love," },
+                { time: 74.25, text: "I know it is" },
+                { time: 76.40, text: "I know it sounds super cliché" },
+                { time: 78.37, text: "But you make me feel some type of way" },
+                { time: 80.27, text: "This is falling," },
+                { time: 82.00, text: "falling in love" },
+                { time: 85.49, text: "I know it sounds super cliché" },
+                { time: 87.38, text: "But you make me feel some type of way" },
+                { time: 89.14, text: "This is falling," },
+                { time: 91.00, text: "falling in love (yeah)" },
+                { time: 94.63, text: "This is falling," },
+                { time: 96.40, text: "falling in love (ooh)" },
+                { time: 98.46, text: "This is falling," },
+                { time: 100.10, text: "falling in love" }
+            ];
+            
+            // Función para actualizar las letras
+            function updateLyrics() {
+                const currentTime = song.currentTime;
+                
+                // Encontrar la letra actual basada en el tiempo
+                let currentLyric = lyrics[0].text;
+                let currentIndex = 0;
+                for (let i = 0; i < lyrics.length; i++) {
+                    if (currentTime >= lyrics[i].time) {
+                        currentLyric = lyrics[i].text;
+                        currentIndex = i;
+                    } else {
+                        break;
+                    }
+                }
+                
+                // Si la letra ha cambiado, aplicar la animación
+                if (lyricsDisplay.textContent !== currentLyric) {
+                    // Limpiar el contenedor
+                    lyricsDisplay.innerHTML = '';
+                    
+                    // Crear elemento con animación
+                    const typingSpan = document.createElement('span');
+                    typingSpan.className = 'typing-animation';
+                    
+                    // Detectar si es móvil
+                    const isMobile = window.innerWidth <= 768;
+                    
+                    if (isMobile && currentLyric.length > 25) {
+                        // Dividir el texto en líneas más cortas para móviles
+                        const words = currentLyric.split(' ');
+                        let lines = [];
+                        let currentLine = '';
+                        
+                        for (let word of words) {
+                            if ((currentLine + word).length < 25) {
+                                currentLine += (currentLine ? ' ' : '') + word;
+                            } else {
+                                if (currentLine) lines.push(currentLine);
+                                currentLine = word;
+                            }
+                        }
+                        if (currentLine) lines.push(currentLine);
+                        
+                        // Mostrar solo la primera línea con animación
+                        typingSpan.textContent = lines[0];
+                        lyricsDisplay.appendChild(typingSpan);
+                        
+                        // Mostrar el resto de líneas sin animación
+                        for (let i = 1; i < lines.length; i++) {
+                            const lineBreak = document.createElement('br');
+                            lyricsDisplay.appendChild(lineBreak);
+                            
+                            const lineSpan = document.createElement('span');
+                            lineSpan.textContent = lines[i];
+                            lyricsDisplay.appendChild(lineSpan);
+                        }
+                    } else {
+                        typingSpan.textContent = currentLyric;
+                        lyricsDisplay.appendChild(typingSpan);
+                    }
+                    
+                    // Verificar si la letra contiene "love" o "falling in love" para crear corazones
+                    const lowerLyric = currentLyric.toLowerCase();
+                    if (lowerLyric.includes("falling in love")) {
+                        createHearts(15, true); // Muchos corazones intensos
+                    } else if (lowerLyric.includes("love")) {
+                        createHearts(5, false); // Pocos corazones normales
+                    }
+                }
+            }
+            
+            // Función para crear corazones animados
+            function createHearts(count, intense) {
+                for (let i = 0; i < count; i++) {
+                    setTimeout(() => {
+                        const heart = document.createElement('div');
+                        heart.className = intense ? 'heart intense' : 'heart normal';
+                        
+                        // Posición horizontal aleatoria
+                        const randomX = Math.floor(Math.random() * window.innerWidth);
+                        heart.style.left = randomX + 'px';
+                        
+                        // Tamaño aleatorio
+                        const size = intense ? 
+                            Math.floor(Math.random() * 20) + 15 : // 15-35px para intensos
+                            Math.floor(Math.random() * 10) + 10;  // 10-20px para normales
+                        
+                        heart.style.width = size + 'px';
+                        heart.style.height = size + 'px';
+                        
+                        // Ajustar los pseudo-elementos
+                        heart.style.setProperty('--size', size + 'px');
+                        
+                        // Color aleatorio (tonos de rojo y rosa)
+                        const colors = intense ? 
+                            ['#cc0000', '#ff0000', '#ff3366', '#ff6699'] : // Colores intensos
+                            ['#cc0000', '#ff6666', '#ff9999'];              // Colores suaves
+                        
+                        const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                        heart.style.backgroundColor = randomColor;
+                        
+                        // Duración de animación aleatoria
+                        const duration = intense ? 
+                            Math.random() * 2 + 2 : // 2-4s para intensos
+                            Math.random() * 3 + 4;  // 4-7s para normales
+                        
+                        heart.style.animationDuration = duration + 's';
+                        
+                        // Movimiento horizontal aleatorio
+                        const randomTranslateX = intense ? 
+                            (Math.random() - 0.5) * 100 : // -50px a 50px para intensos
+                            (Math.random() - 0.5) * 40;   // -20px a 20px para normales
+                        
+                        heart.style.animationName = 'none';
+                        document.body.appendChild(heart);
+                        
+                        // Forzar un reflow para que la animación se reinicie
+                        void heart.offsetWidth;
+                        
+                        // Personalizar la animación
+                        heart.style.animationName = 'heartfloat';
+                        heart.style.transform = `rotate(-45deg) translateX(${randomTranslateX}px)`;
+                        
+                        // Eliminar el corazón después de la animación
+                        setTimeout(() => {
+                            document.body.removeChild(heart);
+                        }, duration * 1000);
+                    }, i * (intense ? 100 : 200)); // Intervalo entre corazones
+                }
+            }
+            
+            // Actualizar las letras cuando la canción termina
+            song.addEventListener('ended', function() {
+                clearInterval(updateLyricsInterval);
+                lyricsDisplay.innerHTML = '<span class="typing-animation">Gracias por escuchar ❤️</span>';
+            });
+            
+            // Variable para el intervalo
+            let updateLyricsInterval;
+        });
+        
+    </script>
+</body>
+</html>
