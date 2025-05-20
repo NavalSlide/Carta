@@ -469,7 +469,7 @@
             }
             .contador-container {
             position: fixed;
-            top: 550px;
+            top: 650px; /* Moved lower for mobile */
             left: 0;
             width: 100%;
             text-align: center;
@@ -478,7 +478,7 @@
             color: white;
             font-weight: bold;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
-            display: none; /* Oculto inicialmente */
+            display: none; /* Initially hidden */
             }
         }
         
@@ -502,6 +502,52 @@
             filter: grayscale(100%);
             opacity: 0.7;
             pointer-events: none;
+        }
+        
+        /* ... existing code ... */
+        
+        /* Estilos para el efecto de brillo solar */
+        .sun-glow {
+            position: fixed;
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,165,0,0.6) 30%, rgba(255,140,0,0.4) 60%, rgba(255,69,0,0) 100%);
+            border-radius: 50%;
+            filter: blur(15px);
+            opacity: 0;
+            transition: opacity 1s ease;
+            z-index: 99;
+            pointer-events: none;
+        }
+        
+        .sun-glow.visible {
+            opacity: 1;
+            animation: pulse 2s infinite alternate;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            100% { transform: scale(1.2); }
+        }
+        
+        .top-left {
+            top: -50px;
+            left: -50px;
+        }
+        
+        .top-right {
+            top: -50px;
+            right: -50px;
+        }
+        
+        .bottom-left {
+            bottom: -50px;
+            left: -50px;
+        }
+        
+        .bottom-right {
+            bottom: -50px;
+            right: -50px;
         }
     </style>
 </head>
@@ -552,6 +598,11 @@
         <button id="iniciar-musica">Sí, estoy lista ❤️</button>
     </div>
 
+    <div class="sun-glow top-left" id="sun-glow-1"></div>
+    <div class="sun-glow top-right" id="sun-glow-2"></div>
+    <div class="sun-glow bottom-left" id="sun-glow-3"></div>
+    <div class="sun-glow bottom-right" id="sun-glow-4"></div>
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             const sobre = document.getElementById('sobre');
@@ -599,6 +650,34 @@
                 updateLyricsInterval = setInterval(updateLyrics, 100);
                 iniciarContador(); // Iniciar el contador
             });
+            
+            // Obtener todos los elementos de brillo solar
+            const sunGlows = document.querySelectorAll('.sun-glow');
+            
+            // Función para mostrar u ocultar los brillos solares
+            function toggleSunGlows(show) {
+                sunGlows.forEach(glow => {
+                    if (show) {
+                        glow.classList.add('visible');
+                    } else {
+                        glow.classList.remove('visible');
+                    }
+                });
+            }
+            
+            // Función para actualizar las letras y mostrar efectos especiales
+            function updateLyrics() {
+                // Código existente para actualizar letras
+                
+                // Verificar si la letra actual contiene "Feel like sun"
+                const currentLyrics = lyricsDisplay.textContent.trim();
+                if (currentLyrics.includes("Feel like sun")) {
+                    toggleSunGlows(true); // Mostrar brillos solares
+                    createHearts(10, true); // Crear más corazones intensos cuando aparece el sol
+                } else {
+                    toggleSunGlows(false); // Ocultar brillos solares
+                }
+            }
             
             sobre.addEventListener('click', function() {
                 if (!estaAbierto) {
@@ -730,6 +809,11 @@
                         createHearts(15, true); // Muchos corazones intensos
                     } else if (lowerLyric.includes("love")) {
                         createHearts(5, false); // Pocos corazones normales
+                    }
+                    if (currentLyric.toLowerCase().includes("feel like sun")) {
+                        toggleSunGlows(true); // Mostrar brillos solares
+                    } else {
+                        toggleSunGlows(false); // Ocultar brillos solares
                     }
                 }
             }
