@@ -1,0 +1,809 @@
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-items: center;
+    min-height: 100vh;
+
+    overflow: hidden;
+    color: white; /* Texto en blanco para mejor contraste */
+}
+
+/* Estilos para el reproductor de música y letras sincronizadas */
+.lyrics-container {
+    position: fixed;
+    top: 10px; /* Movido más arriba */
+    left: 0;
+    width: 100%;
+    padding: 10px 0;
+    text-align: center;
+    z-index: 100;
+}
+
+.lyrics-text {
+    font-size: 2.5em;
+    color: white;
+    font-family: 'Arial', sans-serif;
+    font-weight: bold;
+    margin: 10px 0;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    padding: 0 20px;
+    position: relative;
+}
+
+/* Estilo para enfatizar la palabra Love en rojo */
+.love-emphasis {
+    color: #ff0000;
+    font-weight: bolder;
+    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
+}
+
+/* Estilos para la animación de escritura */
+.typing-animation {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+    border-right: 3px solid white;
+    animation: typing 2s steps(30, end), blink-caret 0.75s step-end infinite;
+    margin: 0 auto;
+    max-width: 100%;
+}
+
+@keyframes typing {
+    from { width: 0 }
+    to { width: 100% }
+}
+
+@keyframes blink-caret {
+    from, to { border-color: transparent }
+    50% { border-color: white }
+}
+
+.container {
+    position: relative;
+    perspective: 1500px;
+    margin-top: auto;
+    margin-bottom: 100px; /* Aumentado el espacio en la parte inferior */
+    pointer-events: none; /* Deshabilita interacción hasta que se active */
+}
+
+.sobre {
+    width: 300px;
+    height: 200px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 0.5s ease;
+    transform-style: preserve-3d;
+    background-color: #f0e6d2;
+    border-radius: 5px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.sobre-frente {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #f0e6d2;
+    border-radius: 5px;
+    z-index: 2;
+}
+
+/* Corazón en lugar del círculo - corregido */
+.corazon {
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) rotate(409deg);
+    background-color: #cc0000;
+}
+
+.corazon::before,
+.corazon::after {
+    content: "";
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    background-color: #cc0000;
+    border-radius: 50%;
+}
+
+.corazon::before {
+    top: -15px;
+    left: 0;
+}
+
+.corazon::after {
+    top: 0;
+    left: -15px;
+}
+
+/* Solapa triangular mejorada */
+.sobre-solapa {
+    position: absolute;
+    width: 100%;
+    height: 100px;
+    top: 0;
+    left: 0;
+    background-color: #e6d9bc;
+    clip-path: polygon(0 0, 50% 100%, 100% 0);
+    transform-origin: top;
+    transition: transform 0.8s ease;
+    z-index: 1;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+/* Añadimos un borde simulado para dar más profundidad al triángulo */
+.sobre-solapa:after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 5%;
+    width: 90%;
+    height: 2px;
+    background-color: rgba(0,0,0,0.1);
+}
+
+.sobre.abierto .sobre-solapa {
+    transform: rotateX(180deg);
+}
+
+/* Solapa triangular interna que se ve siempre */
+.sobre-solapa-interna {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 10vh;
+    transform: rotate(180deg);
+    z-index: 9999; /* para que esté por encima de todo */
+    background-color: #e6d9bc;
+    clip-path: polygon(0 100%, 50% 0, 100% 100%);
+    
+}
+
+.carta {
+    position: absolute;
+    width: 280px;
+    height: 0;
+    background-color: #fff9e6;
+    bottom: 200px; /* Posicionada justo encima del sobre */
+    left: 10px;
+    transition: height 0.8s ease 0.4s, transform 0.8s ease 0.4s;
+    overflow: hidden;
+    z-index: 3; /* Mayor que el sobre para que aparezca por encima */
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateY(0);
+}
+
+.sobre.abierto .carta {
+    height: 180px; /* Altura reducida para que no se vea todo el texto */
+    transform: translateY(-20px); /* Se mueve ligeramente hacia arriba al abrirse */
+}
+
+/* Línea de doblez en la carta */
+.carta:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    top: 90px; /* Posición del doblez */
+    left: 0;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.carta-contenido {
+    padding: 20px;
+    text-align: center;
+    opacity: 0;
+    transition: opacity 0.5s ease 1s;
+    font-family: 'Courier New', Courier, monospace;
+    color: #333;
+    background-image: linear-gradient(to bottom, rgba(255,249,230,0.8) 0%, rgba(255,249,230,0.8) 100%), 
+                      repeating-linear-gradient(#f0e6d2 0px, #f0e6d2 1px, transparent 1px, transparent 25px);
+    height: 100%;
+    overflow-y: auto;
+}
+
+.sobre.abierto .carta-contenido {
+    opacity: 1;
+}
+
+.carta-expandida {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 90vw;
+    max-width: 600px;
+    height: 80vh;
+    max-height: 800px;
+    background-color: #fff9e6;
+    z-index: 10;
+    padding: 30px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    display: none;
+    background-image: linear-gradient(to bottom, rgba(255,249,230,0.8) 0%, rgba(255,249,230,0.8) 100%), 
+                      repeating-linear-gradient(#f0e6d2 0px, #f0e6d2 1px, transparent 1px, transparent 25px);
+}
+
+/* Línea de doblez en la carta expandida */
+.carta-expandida:after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 1px;
+    background-color: rgba(0, 0, 0, 0.1);
+    top: 30%;
+    left: 0;
+    box-shadow: 0 0 3px rgba(0, 0, 0, 0.2);
+}
+
+.carta-expandida.visible {
+    display: block;
+}
+
+.carta-expandida h2 {
+    color: #8b4513;
+    margin-bottom: 20px;
+    font-size: 2em;
+    text-align: center;
+}
+
+.carta-expandida p {
+    line-height: 1.8;
+    margin-bottom: 15px;
+    font-size: 1.2em;
+    color: #333;
+    text-align: justify;
+}
+
+.firma {
+    font-style: italic;
+    margin-top: 30px;
+    font-size: 1.3em;
+    color: #8b4513;
+    text-align: right;
+}
+
+.cerrar-expandida {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 30px;
+    height: 30px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+    color: #8b4513;
+}
+.sobre-solapa-interna.oculto {
+    display: none;
+}
+
+@keyframes sacudir {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-2px, -2px) rotate(-1deg); }
+    50% { transform: translate(2px, 2px) rotate(1deg); }
+    75% { transform: translate(-1px, 2px) rotate(-1deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.sobre-frente:hover {
+    animation: sacudir 0.7s ease;
+}
+
+/* Overlay para bloquear interacción */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000; /* Fondo completamente negro */
+    z-index: 999;
+    pointer-events: auto;
+}
+
+.overlay.oculto {
+    display: none;
+}
+
+/* Notificación para reproducir música */
+.notificacion {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    text-align: center;
+    max-width: 80%;
+    display: block; /* Siempre visible al inicio */
+}
+
+.notificacion.oculta {
+    display: none;
+}
+
+.notificacion.visible {
+    display: block;
+    animation: aparecer 0.5s ease-in-out;
+}
+
+@keyframes aparecer {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.notificacion h3 {
+    margin-bottom: 15px;
+    color: #8b4513;
+}
+
+.notificacion button {
+    background-color: #cc0000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+.notificacion button:hover {
+    background-color: #a00000;
+}
+.heart {
+    position: fixed;
+    bottom: -10px;
+    background-color: #cc0000;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    transform: rotate(-45deg);
+    animation-name: heartfloat;
+    animation-timing-function: ease-in-out;
+    z-index: 999;
+    border-bottom-right-radius: 25%;
+}
+
+.heart:before,
+.heart:after {
+    content: "";
+    background-color: inherit;
+    border-radius: 50%;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.heart:before {
+    top: -50%;
+    left: 0;
+}
+
+.heart:after {
+    left: 50%;
+    top: 0;
+}
+
+.heart.intense {
+    animation-duration: 3s;
+    animation-timing-function: ease-in-out;
+}
+
+.heart.normal {
+    animation-duration: 6s;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes heartfloat {
+    0% {
+        bottom: -10px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 0.8;
+    }
+    100% {
+        bottom: 100%;
+        opacity: 0;
+        transform: rotate(-45deg) translate(10px, 0);
+    }
+}
+
+/* Mejoras para dispositivos móviles */
+@media (max-width: 768px) {
+    .lyrics-text {
+        font-size: 1.5em;
+        min-height: 60px;
+        line-height: 1.3;
+    }
+    
+    .typing-animation {
+        animation: typing 1.5s steps(20, end), blink-caret 0.75s step-end infinite;
+        white-space: normal !important;
+        display: block;
+        text-align: center;
+        width: 100% !important;
+        border-right: none;
+    }
+    
+    .container {
+        margin-bottom: 50px; /* Ajustado para móviles */
+    }
+    
+    .notificacion {
+        padding: 15px;
+    }
+    
+    .notificacion button {
+        padding: 8px 15px;
+    }
+    .contador-container {
+    position: fixed;
+    top: 650px; /* Moved lower for mobile */
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 1001;
+    font-size: 2em;
+    color: white;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    display: none; /* Initially hidden */
+    }
+}
+
+/* Estilos para el contador */
+.contador-container {
+    position: fixed;
+    top: 270px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 1001;
+    font-size: 2em;
+    color: white;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    display: none; /* Oculto inicialmente */
+}
+
+/* Estilo para la carta desactivada */
+.sobre.desactivado {
+    filter: grayscale(100%);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Estilo para el efecto de brillo solar */
+.sun-glow {
+    position: fixed;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,165,0,0.6) 30%, rgba(255,140,0,0.4) 60%, rgba(255,69,0,0) 100%);
+    border-radius: 50%;
+    filter: blur(15px);
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: 99;
+    pointer-events: none;
+}
+
+.sun-glow.visible {
+    opacity: 1;
+    animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); }
+}
+
+.top-left {
+    top: -50px;
+    left: -50px;
+}
+
+.top-right {
+    top: -50px;
+    right: -50px;
+}
+
+.bottom-left {
+    bottom: -50px;
+    left: -50px;
+}
+
+.bottom-right {
+    bottom: -50px;
+    right: -50px;
+}
+
+/* Estilo para resaltar la palabra "love" */
+.love-highlight {
+    color: #ff0000;
+    font-weight: bold;
+}
+.sobre-solapa-interna.oculto {
+    display: none;
+}
+
+@keyframes sacudir {
+    0% { transform: translate(0, 0) rotate(0deg); }
+    25% { transform: translate(-2px, -2px) rotate(-1deg); }
+    50% { transform: translate(2px, 2px) rotate(1deg); }
+    75% { transform: translate(-1px, 2px) rotate(-1deg); }
+    100% { transform: translate(0, 0) rotate(0deg); }
+}
+
+.sobre-frente:hover {
+    animation: sacudir 0.7s ease;
+}
+
+/* Overlay para bloquear interacción */
+.overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: #000; /* Fondo completamente negro */
+    z-index: 999;
+    pointer-events: auto;
+}
+
+.overlay.oculto {
+    display: none;
+}
+
+/* Notificación para reproducir música */
+.notificacion {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    z-index: 1000;
+    text-align: center;
+    max-width: 80%;
+    display: block; /* Siempre visible al inicio */
+}
+
+.notificacion.oculta {
+    display: none;
+}
+
+.notificacion.visible {
+    display: block;
+    animation: aparecer 0.5s ease-in-out;
+}
+
+@keyframes aparecer {
+    from { opacity: 0; transform: translate(-50%, -60%); }
+    to { opacity: 1; transform: translate(-50%, -50%); }
+}
+
+.notificacion h3 {
+    margin-bottom: 15px;
+    color: #8b4513;
+}
+
+.notificacion button {
+    background-color: #cc0000;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 1em;
+    transition: background-color 0.3s;
+}
+
+.notificacion button:hover {
+    background-color: #a00000;
+}
+.heart {
+    position: fixed;
+    bottom: -10px;
+    background-color: #cc0000;
+    display: inline-block;
+    height: 20px;
+    width: 20px;
+    transform: rotate(-45deg);
+    animation-name: heartfloat;
+    animation-timing-function: ease-in-out;
+    z-index: 999;
+    border-bottom-right-radius: 25%;
+}
+
+.heart:before,
+.heart:after {
+    content: "";
+    background-color: inherit;
+    border-radius: 50%;
+    position: absolute;
+    width: 100%;
+    height: 100%;
+}
+
+.heart:before {
+    top: -50%;
+    left: 0;
+}
+
+.heart:after {
+    left: 50%;
+    top: 0;
+}
+
+.heart.intense {
+    animation-duration: 3s;
+    animation-timing-function: ease-in-out;
+}
+
+.heart.normal {
+    animation-duration: 6s;
+    animation-timing-function: ease-in-out;
+}
+
+@keyframes heartfloat {
+    0% {
+        bottom: -10px;
+        opacity: 0;
+    }
+    10% {
+        opacity: 1;
+    }
+    90% {
+        opacity: 0.8;
+    }
+    100% {
+        bottom: 100%;
+        opacity: 0;
+        transform: rotate(-45deg) translate(10px, 0);
+    }
+}
+
+/* Mejoras para dispositivos móviles */
+@media (max-width: 768px) {
+    .lyrics-text {
+        font-size: 1.5em;
+        min-height: 60px;
+        line-height: 1.3;
+    }
+    
+    .typing-animation {
+        animation: typing 1.5s steps(20, end), blink-caret 0.75s step-end infinite;
+        white-space: normal !important;
+        display: block;
+        text-align: center;
+        width: 100% !important;
+        border-right: none;
+    }
+    
+    .container {
+        margin-bottom: 50px; /* Ajustado para móviles */
+    }
+    
+    .notificacion {
+        padding: 15px;
+    }
+    
+    .notificacion button {
+        padding: 8px 15px;
+    }
+    .contador-container {
+    position: fixed;
+    top: 650px; /* Moved lower for mobile */
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 1001;
+    font-size: 2em;
+    color: white;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    display: none; /* Initially hidden */
+    }
+}
+
+/* Estilos para el contador */
+.contador-container {
+    position: fixed;
+    top: 270px;
+    left: 0;
+    width: 100%;
+    text-align: center;
+    z-index: 1001;
+    font-size: 2em;
+    color: white;
+    font-weight: bold;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+    display: none; /* Oculto inicialmente */
+}
+
+/* Estilo para la carta desactivada */
+.sobre.desactivado {
+    filter: grayscale(100%);
+    opacity: 0.7;
+    pointer-events: none;
+}
+
+/* Estilo para el efecto de brillo solar */
+.sun-glow {
+    position: fixed;
+    width: 150px;
+    height: 150px;
+    background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, rgba(255,165,0,0.6) 30%, rgba(255,140,0,0.4) 60%, rgba(255,69,0,0) 100%);
+    border-radius: 50%;
+    filter: blur(15px);
+    opacity: 0;
+    transition: opacity 1s ease;
+    z-index: 99;
+    pointer-events: none;
+}
+
+.sun-glow.visible {
+    opacity: 1;
+    animation: pulse 2s infinite alternate;
+}
+
+@keyframes pulse {
+    0% { transform: scale(1); }
+    100% { transform: scale(1.2); }
+}
+
+.top-left {
+    top: -50px;
+    left: -50px;
+}
+
+.top-right {
+    top: -50px;
+    right: -50px;
+}
+
+.bottom-left {
+    bottom: -50px;
+    left: -50px;
+}
+
+.bottom-right {
+    bottom: -50px;
+    right: -50px;
+}
+

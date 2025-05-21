@@ -1,0 +1,66 @@
+<audio id="audio" controls src="music.mp3"></audio>
+
+<button id="mark">Marcar tiempo para línea</button>
+<p id="line-text">Texto de la línea aquí</p>
+<p id="output"></p>
+
+<script>
+  const lyrics = [
+    "Feel like sun on my skin",
+    "So this is love, I know it is",
+    "I know it sounds super cliché",
+    "But you make me feel some type of way",
+    "This is falling, falling in love, yeah",
+    "Mh-mh-mh-mh-mh-mmh, yeah",
+    "I got a lot on my mind",
+    "Got some more on my plate",
+    "My baby got me looking forward to the end of the day",
+    "What you say? You and me",
+    "Just forget about the past, throw it in the trash",
+    "What you say? You and me",
+    "Live the life we never had like we're never going back",
+    "Feel like sun on my skin",
+    "So this is love, I know it is",
+    "I know it sounds super cliché",
+    "But you make me feel some type of way",
+    "This is falling, falling in love",
+    "I know it sounds super cliché",
+    "But you make me feel some type of way",
+    "This is falling, falling in love (yeah)",
+    "This is falling, falling in love (ooh)",
+    "This is falling, falling in love"
+  ];
+
+  const audio = document.getElementById('audio');
+  const button = document.getElementById('mark');
+  const lineText = document.getElementById('line-text');
+  const output = document.getElementById('output');
+
+  let currentLine = 0;
+  let timings = [];
+
+  lineText.textContent = lyrics[currentLine];
+
+  button.addEventListener('click', () => {
+    const currentTime = audio.currentTime.toFixed(2);
+    timings.push({ time: parseFloat(currentTime), text: lyrics[currentLine] });
+    currentLine++;
+
+    if (currentLine < lyrics.length) {
+      lineText.textContent = lyrics[currentLine];
+    } else {
+      lineText.textContent = "¡Todas las líneas marcadas!";
+      button.disabled = true;
+
+      // Mostrar el array con los tiempos para copiar
+      let outputText = "const lyrics = [\n";
+      timings.forEach(t => {
+        outputText += `  { time: ${t.time}, text: "${t.text}" },\n`;
+      });
+      outputText += "];";
+      output.textContent = outputText;
+    }
+  });
+</script>
+
+<pre id="output" style="white-space: pre-wrap; background:#eee; padding:10px; margin-top:10px;"></pre>
