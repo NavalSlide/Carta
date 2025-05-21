@@ -100,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Letras de "Lover Rock" con tiempos en segundos
     const lyrics = [
-        { time: 0, text: "🎵🎵🎵" },
+        { time: 0, text: "Sube el volumen 🎵🎵🎵" },
         { time: 16.97, text: "Feel like sun" },
         { time: 18.73, text: "on my skin" },
         { time: 21.11, text: "So this is love" },
